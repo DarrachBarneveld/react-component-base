@@ -4,7 +4,11 @@ import SearchApiBox from "./components/SearchApiBox";
 interface AppProps {}
 
 const App: FunctionComponent<AppProps> = () => {
-  return <SearchApiBox />;
+  return (
+    <section className="container mx-auto p-4">
+      <SearchApiBox />
+    </section>
+  );
 };
 
 export default App;

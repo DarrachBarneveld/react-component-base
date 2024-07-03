@@ -39,3 +39,10 @@ type Review = {
   reviewerName: string;
   reviewerEmail: string;
 };
+
+export type ProductAPIResponse = {
+  products: Product[];
+  total: number;
+  skip: number;
+  limit: number;
+};

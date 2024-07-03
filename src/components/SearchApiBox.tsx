@@ -18,17 +18,20 @@ import {
 } from "react";
 import { BiChevronDown } from "react-icons/bi";
 import { MdCheckCircleOutline } from "react-icons/md";
-import { Product } from "../types/products";
+import { Product, ProductAPIResponse } from "../types/products";
 
 interface SearchApiBoxProps {}
 
-const fetchSearchProducts = async (query: string) => {
+const fetchSearchProducts = async (
+  query: string
+): Promise<AxiosResponse<ProductAPIResponse, any>> => {
   const response = await axios(
     `https://dummyjson.com/products/search?q=${query}`
   );
   // if (!response.status === 200) {
   //   throw new Error("Network response was not ok");
   // }
+  // This is fun
 
   return response;
 };
@@ -45,7 +48,11 @@ const SearchApiBox: FunctionComponent<SearchApiBoxProps> = () => {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selected, setSelected] = useState<Product | null>(null);
 
-  const { data, error, isFetching } = useDebouncedSearch(debouncedQuery);
+  const {
+    data: productData,
+    error,
+    isFetching,
+  } = useDebouncedSearch(debouncedQuery);
 
   const debouncedSearch = useMemo(
     () =>
@@ -67,7 +74,7 @@ const SearchApiBox: FunctionComponent<SearchApiBoxProps> = () => {
     <div className="fixed top-16 w-72">
       <Combobox value={selected} onChange={setSelected}>
         <div className="relative mt-1">
-          <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
+          <div className="relative w-full cursor-default rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
             <ComboboxInput
               className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
               displayValue={(product: Product) => product?.title || ""}
@@ -88,12 +95,13 @@ const SearchApiBox: FunctionComponent<SearchApiBoxProps> = () => {
             afterLeave={() => setDebouncedQuery("")}
           >
             <ComboboxOptions className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-              {data?.data.products.length === 0 && debouncedQuery !== "" ? (
+              {productData?.data.products.length === 0 &&
+              debouncedQuery !== "" ? (
                 <div className="relative cursor-default select-none px-4 py-2 text-gray-700">
                   Nothing found.
                 </div>
               ) : (
-                data?.data?.products.map((product: Product) => (
+                productData?.data?.products.map((product: Product) => (
                   <ComboboxOption
                     key={product.id}
                     className={({ active }) =>
