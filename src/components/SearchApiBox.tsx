@@ -20,6 +20,8 @@ import { BiChevronDown } from "react-icons/bi";
 import { MdCheckCircleOutline } from "react-icons/md";
 import { Product } from "../types/products";
 
+// TODO: Comment all code
+
 interface SearchApiBoxProps {}
 
 const fetchSearchProducts = async (query: string) => {
