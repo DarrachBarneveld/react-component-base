@@ -1,6 +1,13 @@
-import { Combobox, Transition } from "@headlessui/react";
+import {
+  Combobox,
+  ComboboxButton,
+  ComboboxInput,
+  ComboboxOption,
+  ComboboxOptions,
+  Transition,
+} from "@headlessui/react";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import debounce from "lodash.debounce";
 import {
   Fragment,
@@ -9,11 +16,13 @@ import {
   useMemo,
   useState,
 } from "react";
+import { BiChevronDown } from "react-icons/bi";
 import { MdCheckCircleOutline } from "react-icons/md";
+import { Product } from "../types/products";
 
 interface SearchApiBoxProps {}
 
-const fetchSearchResults = async (query: string) => {
+const fetchSearchProducts = async (query: string) => {
   const response = await axios(
     `https://dummyjson.com/products/search?q=${query}`
   );
@@ -27,15 +36,14 @@ const fetchSearchResults = async (query: string) => {
 const useDebouncedSearch = (query: string) => {
   return useQuery({
     queryKey: ["searchResults", query],
-    queryFn: () => fetchSearchResults(query),
+    queryFn: () => fetchSearchProducts(query),
     staleTime: 5 * 60 * 1000,
   });
 };
 
 const SearchApiBox: FunctionComponent<SearchApiBoxProps> = () => {
-  const [query, setQuery] = useState("");
-  const [inputValue, setInputValue] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [selected, setSelected] = useState<Product | null>(null);
 
   const { data, error, isFetching } = useDebouncedSearch(debouncedQuery);
 
@@ -50,10 +58,9 @@ const SearchApiBox: FunctionComponent<SearchApiBoxProps> = () => {
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const { value } = event.target;
-      setInputValue(value);
       debouncedSearch(value);
     },
-    [debouncedSearch]
+    []
   );
 
   return (
@@ -61,41 +68,40 @@ const SearchApiBox: FunctionComponent<SearchApiBoxProps> = () => {
       <Combobox value={selected} onChange={setSelected}>
         <div className="relative mt-1">
           <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
-            <Combobox.Input
+            <ComboboxInput
               className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
-              //   displayValue={(person) => }
-              value={inputValue}
+              displayValue={(product: Product) => product?.title || ""}
               onChange={handleChange}
             />
-            <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
-              <ChevronUpDownIcon
+            <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-2">
+              <BiChevronDown
                 className="h-5 w-5 text-gray-400"
                 aria-hidden="true"
               />
-            </Combobox.Button>
+            </ComboboxButton>
           </div>
           <Transition
             as={Fragment}
             leave="transition ease-in duration-100"
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
-            afterLeave={() => setQuery("")}
+            afterLeave={() => setDebouncedQuery("")}
           >
-            <Combobox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-              {data?.data?.length === 0 && query !== "" ? (
+            <ComboboxOptions className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+              {data?.data.products.length === 0 && debouncedQuery !== "" ? (
                 <div className="relative cursor-default select-none px-4 py-2 text-gray-700">
                   Nothing found.
                 </div>
               ) : (
-                data?.data?.products?.map((person) => (
-                  <Combobox.Option
-                    key={person.id}
+                data?.data?.products.map((product: Product) => (
+                  <ComboboxOption
+                    key={product.id}
                     className={({ active }) =>
                       `relative cursor-default select-none py-2 pl-10 pr-4 ${
                         active ? "bg-teal-600 text-white" : "text-gray-900"
                       }`
                     }
-                    value={person}
+                    value={product}
                   >
                     {({ selected, active }) => (
                       <>
@@ -104,7 +110,7 @@ const SearchApiBox: FunctionComponent<SearchApiBoxProps> = () => {
                             selected ? "font-medium" : "font-normal"
                           }`}
                         >
-                          {person.name}
+                          {product.title}
                         </span>
                         {selected ? (
                           <span
@@ -120,10 +126,10 @@ const SearchApiBox: FunctionComponent<SearchApiBoxProps> = () => {
                         ) : null}
                       </>
                     )}
-                  </Combobox.Option>
+                  </ComboboxOption>
                 ))
               )}
-            </Combobox.Options>
+            </ComboboxOptions>
           </Transition>
         </div>
       </Combobox>
