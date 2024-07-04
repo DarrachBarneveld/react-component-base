@@ -8,7 +8,7 @@ interface AppProps {}
 const fetchSearchProducts = async (
   query: string
 ): Promise<AxiosResponse<ProductAPIResponse, any>> => {
-  return await axios(`https://dummyjson.com/producs/search?q=${query}`);
+  return await axios(`https://dummyjson.com/products/search?q=${query}`);
 };
 
 const App: FunctionComponent<AppProps> = () => {

@@ -18,8 +18,9 @@ import {
 import { BiChevronDown } from "react-icons/bi";
 import { MdCheckCircleOutline } from "react-icons/md";
 import { Product, ProductAPIResponse } from "../types/products";
-import { AxiosError } from "axios";
+import { AxiosError, AxiosResponse } from "axios";
 
+// Debounce function using react-query to fetch data
 const useDebouncedSearch = <T, E>(
   query: string,
   fetchFn: (query: string) => Promise<T>
@@ -39,11 +40,13 @@ const SearchApiBox: FunctionComponent<SearchApiBoxProps> = ({ fetchFn }) => {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selected, setSelected] = useState<Product | null>(null);
 
-  const { data, error } = useDebouncedSearch<ProductAPIResponse, AxiosError>(
-    debouncedQuery,
-    fetchFn
-  );
+  // Fetch data using useDebouncedSearch hook on component mount/render using search query and props fetch function
+  const { data } = useDebouncedSearch<
+    AxiosResponse<ProductAPIResponse, any>,
+    AxiosError
+  >(debouncedQuery, fetchFn);
 
+  // Memoize the debounced search function and delay setterFunc by 500ms
   const debouncedSearch = useMemo(
     () =>
       debounce((query: string) => {
@@ -52,6 +55,7 @@ const SearchApiBox: FunctionComponent<SearchApiBoxProps> = ({ fetchFn }) => {
     []
   );
 
+  // Handle change event and call debounced search function
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const { value } = event.target;
