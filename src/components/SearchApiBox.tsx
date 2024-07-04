@@ -7,7 +7,6 @@ import {
   Transition,
 } from "@headlessui/react";
 import { useQuery } from "@tanstack/react-query";
-import axios, { AxiosResponse } from "axios";
 import debounce from "lodash.debounce";
 import {
   Fragment,
@@ -19,40 +18,31 @@ import {
 import { BiChevronDown } from "react-icons/bi";
 import { MdCheckCircleOutline } from "react-icons/md";
 import { Product, ProductAPIResponse } from "../types/products";
+import { AxiosError } from "axios";
 
-interface SearchApiBoxProps {}
-
-const fetchSearchProducts = async (
-  query: string
-): Promise<AxiosResponse<ProductAPIResponse, any>> => {
-  const response = await axios(
-    `https://dummyjson.com/products/search?q=${query}`
-  );
-  // if (!response.status === 200) {
-  //   throw new Error("Network response was not ok");
-  // }
-  // This is fun
-
-  return response;
-};
-
-const useDebouncedSearch = (query: string) => {
-  return useQuery({
+const useDebouncedSearch = <T, E>(
+  query: string,
+  fetchFn: (query: string) => Promise<T>
+) => {
+  return useQuery<T, E>({
     queryKey: ["searchResults", query],
-    queryFn: () => fetchSearchProducts(query),
+    queryFn: () => fetchFn(query),
     staleTime: 5 * 60 * 1000,
   });
 };
 
-const SearchApiBox: FunctionComponent<SearchApiBoxProps> = () => {
+interface SearchApiBoxProps {
+  fetchFn: (query: string) => Promise<any>;
+}
+
+const SearchApiBox: FunctionComponent<SearchApiBoxProps> = ({ fetchFn }) => {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selected, setSelected] = useState<Product | null>(null);
 
-  const {
-    data: productData,
-    error,
-    isFetching,
-  } = useDebouncedSearch(debouncedQuery);
+  const { data, error } = useDebouncedSearch<ProductAPIResponse, AxiosError>(
+    debouncedQuery,
+    fetchFn
+  );
 
   const debouncedSearch = useMemo(
     () =>
@@ -95,23 +85,18 @@ const SearchApiBox: FunctionComponent<SearchApiBoxProps> = () => {
             afterLeave={() => setDebouncedQuery("")}
           >
             <ComboboxOptions className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-              {productData?.data.products.length === 0 &&
-              debouncedQuery !== "" ? (
+              {data?.data.products.length === 0 ? (
                 <div className="relative cursor-default select-none px-4 py-2 text-gray-700">
                   Nothing found.
                 </div>
               ) : (
-                productData?.data?.products.map((product: Product) => (
+                data?.data?.products.map((product: Product) => (
                   <ComboboxOption
                     key={product.id}
-                    className={({ active }) =>
-                      `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                        active ? "bg-teal-600 text-white" : "text-gray-900"
-                      }`
-                    }
+                    className=" relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900 data-[focus]:bg-teal-600 data-[focus]:text-white"
                     value={product}
                   >
-                    {({ selected, active }) => (
+                    {({ selected }) => (
                       <>
                         <span
                           className={`block truncate ${
@@ -121,11 +106,7 @@ const SearchApiBox: FunctionComponent<SearchApiBoxProps> = () => {
                           {product.title}
                         </span>
                         {selected ? (
-                          <span
-                            className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                              active ? "text-white" : "text-teal-600"
-                            }`}
-                          >
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-teal-600 data-[focus]:text-white">
                             <MdCheckCircleOutline
                               className="h-5 w-5"
                               aria-hidden="true"
