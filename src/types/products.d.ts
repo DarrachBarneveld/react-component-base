@@ -40,9 +40,13 @@ type Review = {
   reviewerEmail: string;
 };
 
-export type ProductAPIResponse = {
+export type APIResponse = {
   products: Product[];
   total: number;
   skip: number;
   limit: number;
 };
+
+export interface ProductAPIResponse extends APIResponse {
+  products: Product[];
+}

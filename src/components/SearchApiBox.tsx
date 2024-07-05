@@ -14,10 +14,11 @@ import { HiOutlineChevronUpDown } from "react-icons/hi2";
 // Debounce function using react-query to fetch data
 const useDebouncedSearch = <T, E>(
   query: string,
-  fetchFn: (query: string) => Promise<T>
+  fetchFn: (query: string) => Promise<T>,
+  queryKey: string
 ) => {
   return useQuery<T, E>({
-    queryKey: ["searchResults", query],
+    queryKey: [queryKey, query],
     queryFn: () => fetchFn(query),
     staleTime: 5 * 60 * 1000,
   });
@@ -28,12 +29,14 @@ interface SearchApiBoxProps<T> {
   fetchFn: (query: string) => Promise<any>;
   renderComponent: RenderComponent<T>;
   displayValue: (data: any) => string;
+  queryKey: string;
 }
 
 const SearchApiBox = <T,>({
   fetchFn,
   renderComponent,
   displayValue,
+  queryKey,
 }: SearchApiBoxProps<T>) => {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selected, setSelected] = useState<T | null>(null);
@@ -41,7 +44,8 @@ const SearchApiBox = <T,>({
   // Fetch data using useDebouncedSearch hook on component mount/render using search query and props fetch function
   const { data } = useDebouncedSearch<AxiosResponse, AxiosError>(
     debouncedQuery,
-    fetchFn
+    fetchFn,
+    queryKey
   );
 
   // Memoize the debounced search function and delay setterFunc by 500ms
